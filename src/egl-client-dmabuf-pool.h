@@ -25,31 +25,58 @@
 
 #pragma once
 
-#include "ws.h"
-
-typedef void *EGLDisplay;
+#include "egl-client.h"
+#include "wpe-dmabuf-pool-client-protocol.h"
+#include <epoxy/egl.h>
+#include <wayland-client.h>
 
 namespace WS {
+namespace EGLClient {
 
-class ImplEGLStream final : public Instance::Impl {
+class BackendDmabufPool final : public BackendImpl {
 public:
-    ImplEGLStream();
-    virtual ~ImplEGLStream();
+    BackendDmabufPool(BaseBackend&);
+    virtual ~BackendDmabufPool();
 
-    ImplementationType type() const override { return ImplementationType::EGLStream; }
-    bool initialized() const override { return m_initialized; }
-
-    void surfaceAttach(Surface&, struct wl_resource*) override;
-    void surfaceCommit(Surface&) override;
-
-    struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) override { return nullptr; }
-
-    bool initialize(EGLDisplay);
-
-private:
-    bool m_initialized { false };
-
-    struct wl_global* m_eglstreamController { nullptr };
+    EGLNativeDisplayType nativeDisplay() const override;
+    uint32_t platform() const override;
 };
 
-} // namespace WS
+class TargetDmabufPool final : public TargetImpl {
+public:
+    TargetDmabufPool(BaseTarget&, uint32_t width, uint32_t height);
+    virtual ~TargetDmabufPool();
+
+    EGLNativeWindowType nativeWindow() const override;
+
+    void resize(uint32_t width, uint32_t height) override;
+
+    void frameWillRender() override;
+    void frameRendered() override;
+
+private:
+    BaseTarget& m_base;
+
+    static const struct wpe_dmabuf_data_listener s_dmabufDataListener;
+    static const struct wl_buffer_listener s_bufferListener;
+
+    struct {
+        bool initialized { false };
+        uint32_t width;
+        uint32_t height;
+
+        PFNEGLCREATEIMAGEKHRPROC createImageKHR;
+        PFNGLEGLIMAGETARGETRENDERBUFFERSTORAGEOESPROC imageTargetRenderbufferStorageOES;
+
+        GLuint framebuffer;
+    } m_renderer;
+
+    struct Buffer;
+
+    struct {
+        Buffer* current { nullptr };
+        struct wl_list list;
+    } m_buffer;
+};
+
+} } // namespace WS::EGLClient

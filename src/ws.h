@@ -33,6 +33,7 @@
 #include <wayland-server.h>
 
 struct linux_dmabuf_buffer;
+struct wpe_dmabuf_pool_entry;
 struct wpe_video_plane_display_dmabuf_export;
 struct wpe_audio_packet_export;
 
@@ -42,10 +43,14 @@ struct APIClient {
     virtual ~APIClient() = default;
 
     virtual void frameCallback(struct wl_resource*) = 0;
+
     virtual void exportBufferResource(struct wl_resource*) = 0;
     virtual void exportLinuxDmabuf(const struct linux_dmabuf_buffer *dmabuf_buffer) = 0;
     virtual void exportShmBuffer(struct wl_resource*, struct wl_shm_buffer*) = 0;
     virtual void exportEGLStreamProducer(struct wl_resource*) = 0;
+
+    virtual struct wpe_dmabuf_pool_entry* createDmabufPoolEntry() = 0;
+    virtual void commitDmabufPoolEntry(struct wpe_dmabuf_pool_entry*) = 0;
 };
 
 struct Surface;
@@ -75,6 +80,8 @@ public:
 
         virtual void surfaceAttach(Surface&, struct wl_resource*) = 0;
         virtual void surfaceCommit(Surface&) = 0;
+
+        virtual struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) = 0;
 
     private:
         Instance* m_instance { nullptr };
@@ -123,6 +130,7 @@ private:
     struct wl_display* m_display { nullptr };
     struct wl_global* m_compositor { nullptr };
     struct wl_global* m_wpeBridge { nullptr };
+    struct wl_global* m_wpeDmabufPoolManager { nullptr };
     GSource* m_source { nullptr };
 
     std::unordered_map<uint32_t, Surface*> m_viewBackendMap;

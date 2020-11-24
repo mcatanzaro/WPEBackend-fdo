@@ -27,29 +27,25 @@
 
 #include "ws.h"
 
-typedef void *EGLDisplay;
-
 namespace WS {
 
-class ImplEGLStream final : public Instance::Impl {
+class ImplDmabufPool : public Instance::Impl {
 public:
-    ImplEGLStream();
-    virtual ~ImplEGLStream();
+    ImplDmabufPool();
+    virtual ~ImplDmabufPool();
 
-    ImplementationType type() const override { return ImplementationType::EGLStream; }
+    ImplementationType type() const override { return ImplementationType::DmabufPool; }
     bool initialized() const override { return m_initialized; }
 
     void surfaceAttach(Surface&, struct wl_resource*) override;
     void surfaceCommit(Surface&) override;
 
-    struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) override { return nullptr; }
+    struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) override;
 
-    bool initialize(EGLDisplay);
+    bool initialize();
 
 private:
     bool m_initialized { false };
-
-    struct wl_global* m_eglstreamController { nullptr };
 };
 
 } // namespace WS

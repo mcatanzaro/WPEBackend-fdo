@@ -23,33 +23,47 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#if !defined(__WPE_FDO_DMABUF_H_INSIDE__) && !defined(WPE_FDO_COMPILATION)
+#error "Only <wpe/unstable/fdo-dmabuf.h> can be included directly."
+#endif
 
-#include "ws.h"
+#ifndef __dmabuf_pool_entry_h__
+#define __dmabuf_pool_entry_h__
 
-typedef void *EGLDisplay;
+#include <stdint.h>
 
-namespace WS {
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-class ImplEGLStream final : public Instance::Impl {
-public:
-    ImplEGLStream();
-    virtual ~ImplEGLStream();
+struct wpe_dmabuf_pool_entry;
 
-    ImplementationType type() const override { return ImplementationType::EGLStream; }
-    bool initialized() const override { return m_initialized; }
+struct wpe_dmabuf_pool_entry_init {
+    uint32_t width;
+    uint32_t height;
+    uint32_t format;
 
-    void surfaceAttach(Surface&, struct wl_resource*) override;
-    void surfaceCommit(Surface&) override;
-
-    struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) override { return nullptr; }
-
-    bool initialize(EGLDisplay);
-
-private:
-    bool m_initialized { false };
-
-    struct wl_global* m_eglstreamController { nullptr };
+    unsigned num_planes;
+    int fds[4];
+    uint32_t strides[4];
+    uint32_t offsets[4];
+    uint64_t modifiers[4];
 };
 
-} // namespace WS
+struct wpe_dmabuf_pool_entry*
+wpe_dmabuf_pool_entry_create(struct wpe_dmabuf_pool_entry_init*);
+
+void
+wpe_dmabuf_pool_entry_destroy(struct wpe_dmabuf_pool_entry*);
+
+void
+wpe_dmabuf_pool_entry_set_user_data(struct wpe_dmabuf_pool_entry*, void*);
+
+void*
+wpe_dmabuf_pool_entry_get_user_data(struct wpe_dmabuf_pool_entry*);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif /* __dmabuf_pool_entry_h__ */

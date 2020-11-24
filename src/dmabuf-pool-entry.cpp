@@ -23,33 +23,51 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "dmabuf-pool-entry-private.h"
 
-#include "ws.h"
+extern "C" {
 
-typedef void *EGLDisplay;
+__attribute__((visibility("default")))
+struct wpe_dmabuf_pool_entry*
+wpe_dmabuf_pool_entry_create(struct wpe_dmabuf_pool_entry_init* entry_init)
+{
+    auto* entry = new struct wpe_dmabuf_pool_entry;
+    entry->data = nullptr;
 
-namespace WS {
+    entry->width = entry_init->width;
+    entry->height = entry_init->height;
+    entry->format = entry_init->format;
 
-class ImplEGLStream final : public Instance::Impl {
-public:
-    ImplEGLStream();
-    virtual ~ImplEGLStream();
+    entry->num_planes = entry_init->num_planes;
+    for (unsigned i = 0; i < entry->num_planes; ++i) {
+        entry->fds[i] = entry_init->fds[i];
+        entry->strides[i] = entry_init->strides[i];
+        entry->offsets[i] = entry_init->offsets[i];
+        entry->modifiers[i] = entry_init->modifiers[i];
+    }
 
-    ImplementationType type() const override { return ImplementationType::EGLStream; }
-    bool initialized() const override { return m_initialized; }
+    return entry;
+}
 
-    void surfaceAttach(Surface&, struct wl_resource*) override;
-    void surfaceCommit(Surface&) override;
+__attribute__((visibility("default")))
+void
+wpe_dmabuf_pool_entry_destroy(struct wpe_dmabuf_pool_entry* entry)
+{
+    delete entry;
+}
 
-    struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) override { return nullptr; }
+__attribute__((visibility("default")))
+void
+wpe_dmabuf_pool_entry_set_user_data(struct wpe_dmabuf_pool_entry* entry, void* data)
+{
+    entry->data = data;
+}
 
-    bool initialize(EGLDisplay);
+__attribute__((visibility("default")))
+void*
+wpe_dmabuf_pool_entry_get_user_data(struct wpe_dmabuf_pool_entry* entry)
+{
+    return entry->data;
+}
 
-private:
-    bool m_initialized { false };
-
-    struct wl_global* m_eglstreamController { nullptr };
-};
-
-} // namespace WS
+} // extern "C"

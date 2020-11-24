@@ -23,33 +23,20 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "wpe/unstable/initialize-dmabuf.h"
 
-#include "ws.h"
+#include "ws-dmabuf-pool.h"
 
-typedef void *EGLDisplay;
+extern "C" {
 
-namespace WS {
+__attribute__((visibility("default")))
+bool
+wpe_fdo_initialize_dmabuf(void)
+{
+    WS::Instance::construct(std::unique_ptr<WS::ImplDmabufPool>(new WS::ImplDmabufPool));
 
-class ImplEGLStream final : public Instance::Impl {
-public:
-    ImplEGLStream();
-    virtual ~ImplEGLStream();
+    auto& instance = WS::Instance::singleton();
+    return static_cast<WS::ImplDmabufPool&>(instance.impl()).initialize();
+}
 
-    ImplementationType type() const override { return ImplementationType::EGLStream; }
-    bool initialized() const override { return m_initialized; }
-
-    void surfaceAttach(Surface&, struct wl_resource*) override;
-    void surfaceCommit(Surface&) override;
-
-    struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) override { return nullptr; }
-
-    bool initialize(EGLDisplay);
-
-private:
-    bool m_initialized { false };
-
-    struct wl_global* m_eglstreamController { nullptr };
-};
-
-} // namespace WS
+}

@@ -25,31 +25,24 @@
 
 #pragma once
 
-#include "ws.h"
+#include "wpe/unstable/dmabuf-pool-entry.h"
 
-typedef void *EGLDisplay;
+#include <array>
 
-namespace WS {
+struct wl_resource;
 
-class ImplEGLStream final : public Instance::Impl {
-public:
-    ImplEGLStream();
-    virtual ~ImplEGLStream();
+struct wpe_dmabuf_pool_entry {
+    struct wl_resource* bufferResource { nullptr };
 
-    ImplementationType type() const override { return ImplementationType::EGLStream; }
-    bool initialized() const override { return m_initialized; }
+    void* data { nullptr };
 
-    void surfaceAttach(Surface&, struct wl_resource*) override;
-    void surfaceCommit(Surface&) override;
+    uint32_t width { 0 };
+    uint32_t height { 0 };
+    uint32_t format { 0 };
 
-    struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) override { return nullptr; }
-
-    bool initialize(EGLDisplay);
-
-private:
-    bool m_initialized { false };
-
-    struct wl_global* m_eglstreamController { nullptr };
+    unsigned num_planes { 0 };
+    std::array<int, 4> fds { -1, -1, -1, -1 };
+    std::array<uint32_t, 4> strides { };
+    std::array<uint32_t, 4> offsets { };
+    std::array<uint64_t, 4> modifiers { };
 };
-
-} // namespace WS

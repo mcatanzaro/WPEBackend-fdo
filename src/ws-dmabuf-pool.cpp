@@ -23,33 +23,49 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "ws-dmabuf-pool.h"
 
-#include "ws.h"
-
-typedef void *EGLDisplay;
+#include "dmabuf-pool-entry-private.h"
+#include "wpe-dmabuf-pool-server-protocol.h"
 
 namespace WS {
 
-class ImplEGLStream final : public Instance::Impl {
-public:
-    ImplEGLStream();
-    virtual ~ImplEGLStream();
+ImplDmabufPool::ImplDmabufPool() = default;
+ImplDmabufPool::~ImplDmabufPool() = default;
 
-    ImplementationType type() const override { return ImplementationType::EGLStream; }
-    bool initialized() const override { return m_initialized; }
+void ImplDmabufPool::surfaceAttach(Surface& surface, struct wl_resource* bufferResource)
+{
+    if (surface.bufferResource)
+        wl_buffer_send_release(surface.bufferResource);
+    surface.bufferResource = bufferResource;
+}
 
-    void surfaceAttach(Surface&, struct wl_resource*) override;
-    void surfaceCommit(Surface&) override;
+void ImplDmabufPool::surfaceCommit(Surface& surface)
+{
+    if (!surface.apiClient)
+        return;
 
-    struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) override { return nullptr; }
+    struct wl_resource* bufferResource = surface.bufferResource;
+    surface.bufferResource = nullptr;
+    if (!bufferResource)
+        return;
 
-    bool initialize(EGLDisplay);
+    auto* entry = static_cast<struct wpe_dmabuf_pool_entry*>(wl_resource_get_user_data(bufferResource));
+    surface.apiClient->commitDmabufPoolEntry(entry);
+}
 
-private:
-    bool m_initialized { false };
+struct wpe_dmabuf_pool_entry* ImplDmabufPool::createDmabufPoolEntry(Surface& surface)
+{
+    if (!surface.apiClient)
+        return nullptr;
 
-    struct wl_global* m_eglstreamController { nullptr };
-};
+    return surface.apiClient->createDmabufPoolEntry();
+}
+
+bool ImplDmabufPool::initialize()
+{
+    m_initialized = true;
+    return true;
+}
 
 } // namespace WS

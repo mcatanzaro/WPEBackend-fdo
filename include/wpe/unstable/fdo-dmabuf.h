@@ -23,33 +23,19 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#ifdef __WEBKIT_WEB_EXTENSION_H__
+#error "Headers <wpe/unstable/fdo-dmabuf.h> and <wpe/webkit-web-extension.h> cannot be included together."
+#endif
 
-#include "ws.h"
+#ifndef __wpe_fdo_dmabuf_h__
+#define __wpe_fdo_dmabuf_h__
 
-typedef void *EGLDisplay;
+#define __WPE_FDO_DMABUF_H_INSIDE__
 
-namespace WS {
+#include <wpe/unstable/dmabuf-pool-entry.h>
+#include <wpe/unstable/initialize-dmabuf.h>
+#include <wpe/unstable/view-backend-dmabuf-pool-fdo.h>
 
-class ImplEGLStream final : public Instance::Impl {
-public:
-    ImplEGLStream();
-    virtual ~ImplEGLStream();
+#undef __WPE_FDO_DMABUF_H_INSIDE__
 
-    ImplementationType type() const override { return ImplementationType::EGLStream; }
-    bool initialized() const override { return m_initialized; }
-
-    void surfaceAttach(Surface&, struct wl_resource*) override;
-    void surfaceCommit(Surface&) override;
-
-    struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) override { return nullptr; }
-
-    bool initialize(EGLDisplay);
-
-private:
-    bool m_initialized { false };
-
-    struct wl_global* m_eglstreamController { nullptr };
-};
-
-} // namespace WS
+#endif /* __wpe_fdo_dmabuf_h__ */

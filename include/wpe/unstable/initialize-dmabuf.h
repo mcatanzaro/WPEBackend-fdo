@@ -23,33 +23,24 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#if !defined(__WPE_FDO_DMABUF_H_INSIDE__) && !defined(WPE_FDO_COMPILATION)
+#error "Only <wpe/unstable/fdo-dmabuf.h> can be included directly."
+#endif
 
-#include "ws.h"
+#ifndef __initialize_dmabuf_h__
+#define __initialize_dmabuf_h__
 
-typedef void *EGLDisplay;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-namespace WS {
+#include <stdbool.h>
 
-class ImplEGLStream final : public Instance::Impl {
-public:
-    ImplEGLStream();
-    virtual ~ImplEGLStream();
+bool
+wpe_fdo_initialize_dmabuf(void);
 
-    ImplementationType type() const override { return ImplementationType::EGLStream; }
-    bool initialized() const override { return m_initialized; }
+#ifdef __cplusplus
+}
+#endif
 
-    void surfaceAttach(Surface&, struct wl_resource*) override;
-    void surfaceCommit(Surface&) override;
-
-    struct wpe_dmabuf_pool_entry* createDmabufPoolEntry(Surface&) override { return nullptr; }
-
-    bool initialize(EGLDisplay);
-
-private:
-    bool m_initialized { false };
-
-    struct wl_global* m_eglstreamController { nullptr };
-};
-
-} // namespace WS
+#endif /* __initialize_dmabuf_h__ */
